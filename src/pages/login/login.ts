@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, AlertController } from 'ionic-angular';
 import { TabsPage } from '../tabs/tabs';
+import { WebapiServiceProvider } from '../../providers/webapi-service/webapi-service';
 
 @IonicPage()
 @Component({
@@ -9,12 +10,19 @@ import { TabsPage } from '../tabs/tabs';
 })
 export class LoginPage {
 
-  username:string;
-  password:string;
+  userData = {
+    "username":"",
+    "password":""
+  }
+
+  // ตัวแปรรับข้อมูลจาก api
+  responseData:any;
 
   constructor(
     public navCtrl: NavController, 
-    public navParams: NavParams) {
+    public navParams: NavParams,
+    public webapi: WebapiServiceProvider,
+    public alertCtrl: AlertController) {
   }
 
   ionViewDidLoad() {
@@ -22,13 +30,32 @@ export class LoginPage {
   }
 
 login(){
-  if(this.username == "admin" && this.password == "12345"){
-    alert("เข้าระบบถูกต้อง");
-    localStorage.setItem("userData",this.username);
-    this.navCtrl.setRoot(TabsPage);
-  } else {
-    alert("ข้อมูลไม่ถูกต้อง");
-  }
+ 
+  this.webapi.postData(this.userData,'login.php').then((result)=>{
+    this.responseData = result;
+    //alert(JSON.stringify(this.responseData)); 
+    if(this.responseData.userData){
+      let alert = this.alertCtrl.create({
+        title:"สถานะการเข้าระบบ",
+        subTitle:"เข้าระบบเรียบร้อยแล้ว",
+        buttons:['Dismiss']
+      });
+      alert.present();
+      localStorage.setItem("userData",this.userData.username);
+     // ปิดหน้า Login กลับไปหน้าหลัก
+      this.navCtrl.setRoot(TabsPage);
+    }else{
+      let alert = this.alertCtrl.create({
+        title:"สถานะการเข้าระบบ",
+        subTitle:"เข้าระบบไม่สำเร็จ",
+        buttons:['Dismiss']
+      });
+      alert.present();
+    }
+
+  });
+
+ 
 }
 
 }
